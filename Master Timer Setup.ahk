@@ -3,7 +3,7 @@
 global ProtectionEnabled := true
 
 ; --- Auto-update configuration (GitHub raw, public repo) ---
-Global AppVersion := "1.0.1"
+Global AppVersion := "1.0.2"
 Global UpdateRepo := "Kryptoniannn/master-timer-autoupdate"
 Global UpdateExeName := "Reload reminder Ultra.exe"
 Global UpdateCheckURL := "https://raw.githubusercontent.com/" UpdateRepo "/main/version.txt"
@@ -724,7 +724,7 @@ ShowSetupGui() {
             return
         }
     }
-    SetupGui := Gui("-MinimizeBox -MaximizeBox", "Master Timer Setup")
+    SetupGui := Gui("-MinimizeBox -MaximizeBox", "Reload reminder Ultra")
     SetupGui.SetFont("s9", "Segoe UI")
 
     ; ---- Interval ----
@@ -1011,5 +1011,4 @@ UpdateClip(Type) {
     ToolTip ProtectionEnabled ? "Word Breaker ON" : "Word Breaker OFF"
     SetTimer(() => ToolTip(), -1500)
 }
-
 
