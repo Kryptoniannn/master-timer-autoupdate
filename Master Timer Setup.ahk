@@ -878,37 +878,36 @@ VersionCompare(v1, v2) {
 }
 
 CheckForUpdate() {
-    global AppVersion, UpdateCheckURL, UpdateExeURL, UpdateTempDir, UpdateRepo, UpdateExeName, UpdateLog
+    global AppVersion, UpdateCheckURL, UpdateExeURL, UpdateTempDir, UpdateExeName
     try {
-        ; Download version.txt
+        DirCreate(UpdateTempDir)
         localV := AppVersion
-        remoteV := ""
+        ; cache-buster query param jate CDN stale na dey
+        local vurl := UpdateCheckURL "?t=" A_TickCount
+        local vf := UpdateTempDir "\version.txt"
         try {
-            Download(UpdateCheckURL, UpdateTempDir "\version.txt")
-            remoteV := Trim(FileRead(UpdateTempDir "\version.txt"), " `t`r`n")
+            Download(vurl, vf)
         } catch {
             AppLog("update check failed: cannot download version")
             return
         }
-        if (remoteV = "")
-            return
-        if (VersionCompare(remoteV, localV) <= 0)
+        local remoteV := Trim(FileRead(vf), " `t`r`n")
+        if (remoteV = "" || VersionCompare(remoteV, localV) <= 0)
             return  ; no new version
 
         AppLog("update available: " localV " -> " remoteV " - downloading")
-
-        ; Download new exe to temp
-        DirCreate(UpdateTempDir)
+        local eurl := UpdateExeURL "?t=" A_TickCount
         local newExe := UpdateTempDir "\new.exe"
-        Download(UpdateExeURL, newExe)
-
-        ; Locate current exe path
-        local cur := A_ScriptFullPath
-        if (FileGetSize(newExe) < 100000) {
-            AppLog("update failed: downloaded file too small")
+        try {
+            Download(eurl, newExe)
+        } catch {
+            AppLog("update download failed")
             return
         }
-
+        if (FileGetSize(newExe) < 100000) {
+            AppLog("update failed: file too small")
+            return
+        }
         ; Write batch updater: wait -> replace -> restart
         local bat := UpdateTempDir "\updater.bat"
         local l1 := '@echo off'
@@ -919,12 +918,11 @@ CheckForUpdate() {
         local l6 := '  timeout /t 1 /nobreak >nul'
         local l7 := '  goto waitloop'
         local l8 := ')'
-        local l9 := 'copy /Y "' newExe '" "' cur '" >nul 2>&1'
-        local l10 := 'start "" "' cur '"'
+        local l9 := 'copy /Y "' newExe '" "' A_ScriptFullPath '" >nul 2>&1'
+        local l10 := 'start "" "' A_ScriptFullPath '"'
         local l11 := 'del "' bat '" >nul 2>&1'
         local batText := l1 "`r`n" l2 "`r`n" l3 "`r`n" l4 "`r`n" l5 "`r`n" l6 "`r`n" l7 "`r`n" l8 "`r`n" l9 "`r`n" l10 "`r`n" l11 "`r`n"
         FileAppend(batText, bat, "UTF-8")
-
         AppLog("update staged - restarting via updater")
         Run('cmd /c "' bat '"',, "Hide")
         ExitApp()
