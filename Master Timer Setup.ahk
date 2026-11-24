@@ -3,7 +3,7 @@
 global ProtectionEnabled := true
 
 ; --- Auto-update configuration (GitHub raw, public repo) ---
-Global AppVersion := "1.0.0"
+Global AppVersion := "1.0.1"
 Global UpdateRepo := "Kryptoniannn/master-timer-autoupdate"
 Global UpdateExeName := "Reload reminder Ultra.exe"
 Global UpdateCheckURL := "https://raw.githubusercontent.com/" UpdateRepo "/main/version.txt"
@@ -911,17 +911,16 @@ CheckForUpdate() {
         ; Write batch updater: wait -> replace -> restart
         local bat := UpdateTempDir "\updater.bat"
         local l1 := '@echo off'
-        local l2 := 'timeout /t 3 /nobreak >nul'
-        local l3 := ':waitloop'
-        local l4 := 'tasklist /FI "IMAGENAME eq ' UpdateExeName '" 2>NUL | find /I "' UpdateExeName '" >NUL'
-        local l5 := 'if not errorlevel 1 ('
+        local l2 := 'timeout /t 5 /nobreak >nul'
+        local l3 := ':copyloop'
+        local l4 := 'copy /Y "' newExe '" "' A_ScriptFullPath '" >nul 2>&1'
+        local l5 := 'if errorlevel 1 ('
         local l6 := '  timeout /t 1 /nobreak >nul'
-        local l7 := '  goto waitloop'
+        local l7 := '  goto copyloop'
         local l8 := ')'
-        local l9 := 'copy /Y "' newExe '" "' A_ScriptFullPath '" >nul 2>&1'
-        local l10 := 'start "" "' A_ScriptFullPath '"'
-        local l11 := 'del "' bat '" >nul 2>&1'
-        local batText := l1 "`r`n" l2 "`r`n" l3 "`r`n" l4 "`r`n" l5 "`r`n" l6 "`r`n" l7 "`r`n" l8 "`r`n" l9 "`r`n" l10 "`r`n" l11 "`r`n"
+        local l9 := 'start "" "' A_ScriptFullPath '"'
+        local l10 := 'del "' bat '" >nul 2>&1'
+        local batText := l1 "`r`n" l2 "`r`n" l3 "`r`n" l4 "`r`n" l5 "`r`n" l6 "`r`n" l7 "`r`n" l8 "`r`n" l9 "`r`n" l10 "`r`n"
         FileAppend(batText, bat, "UTF-8")
         AppLog("update staged - restarting via updater")
         Run('cmd /c "' bat '"',, "Hide")
@@ -1012,4 +1011,5 @@ UpdateClip(Type) {
     ToolTip ProtectionEnabled ? "Word Breaker ON" : "Word Breaker OFF"
     SetTimer(() => ToolTip(), -1500)
 }
+
 
